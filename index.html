@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Scrollable Math Quiz (One Submit)</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#111827; --ink:#e5e7eb; --muted:#9ca3af;
+    --accent:#60a5fa; --ok:#22c55e; --bad:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:980px;margin:28px auto;padding:0 16px}
+  .card{background:var(--panel);border:1px solid #1f2937;border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.35);overflow:hidden}
+  header{padding:16px 20px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  h1{margin:0;font-size:20px}
+  .muted{color:var(--muted)}
+  .content{padding:18px 18px 6px}
+  .q{padding:16px;border:1px solid #1f2937;border-radius:14px;margin:0 0 16px;background:#0b1220}
+  .q h2{margin:0 0 8px;font-size:18px}
+  .prompt{margin:6px 0 10px}
+  canvas{display:block;background:#0b1020;border:1px solid #1f2937;border-radius:12px;width:100%;max-width:560px;height:auto;margin:10px 0}
+  .choices{display:grid;gap:8px;margin-top:8px}
+  label.choice{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid #1f2937;border-radius:10px;background:#0b1322;cursor:pointer}
+  label.choice:hover{border-color:#26334d}
+  input[type=radio]{margin-top:2px}
+  .bottom{padding:14px 18px;border-top:1px solid #1f2937;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  button{background:#111827;color:var(--ink);border:1px solid #1f2937;padding:10px 14px;border-radius:10px;cursor:pointer;font-size:15px}
+  button.primary{background:var(--accent);color:#0b1020;border-color:transparent}
+  button[disabled]{opacity:.55;cursor:not-allowed}
+  .results{padding:18px;border-top:1px solid #1f2937;display:none}
+  .score{font-weight:700;margin-bottom:10px}
+  .explain{display:none;margin-top:8px;color:var(--muted);font-size:14px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #1f2937;background:#0b1220;color:var(--muted);font-size:12px}
+  .correct{color:var(--ok)} .incorrect{color:var(--bad)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <h1>Graph & Slope Quiz</h1>
+        <div class="muted" id="progress">0 / 8 answered</div>
+      </header>
+
+      <div class="content" id="quiz">
+
+        <!-- Q1 hidden-equation graph: y = 2x + 10 (ask slope sign) -->
+        <section class="q" data-correct="Positive">
+          <h2>Q1</h2>
+          <div class="prompt"><strong>A line is graphed below (equation hidden).</strong> What is the sign/type of its slope?</div>
+          <canvas width="560" height="360" data-graph="line" data-m="2" data-b="10"></canvas>
+          <div class="choices" role="radiogroup" aria-label="Q1 choices">
+            <label class="choice"><input type="radio" name="q1" value="Positive"> Positive</label>
+            <label class="choice"><input type="radio" name="q1" value="Negative"> Negative</label>
+            <label class="choice"><input type="radio" name="q1" value="Zero"> Zero</label>
+            <label class="choice"><input type="radio" name="q1" value="Undefined"> Undefined</label>
+          </div>
+          <div class="explain">The line rises as x increases, so its slope is <strong>positive</strong>.</div>
+        </section>
+
+        <!-- Q2 graph x=5 (slope undefined) -->
+        <section class="q" data-correct="Undefined">
+          <h2>Q2</h2>
+          <div class="prompt"><strong>Consider the vertical line x = 5.</strong> What is its slope?</div>
+          <canvas width="560" height="360" data-graph="vertical" data-x="5"></canvas>
+          <div class="choices" role="radiogroup" aria-label="Q2 choices">
+            <label class="choice"><input type="radio" name="q2" value="Positive"> Positive</label>
+            <label class="choice"><input type="radio" name="q2" value="Negative"> Negative</label>
+            <label class="choice"><input type="radio" name="q2" value="Zero"> Zero</label>
+            <label class="choice"><input type="radio" name="q2" value="Undefined"> Undefined</label>
+          </div>
+          <div class="explain">Vertical lines have <strong>undefined</strong> slope (run = 0).</div>
+        </section>
+
+        <!-- Q3 horizontal y=-3 (slope zero) -->
+        <section class="q" data-correct="Zero">
+          <h2>Q3</h2>
+          <div class="prompt"><strong>The horizontal line y = −3 is shown.</strong> What is its slope?</div>
+          <canvas width="560" height="360" data-graph="horizontal" data-y="-3"></canvas>
+          <div class="choices" role="radiogroup" aria-label="Q3 choices">
+            <label class="choice"><input type="radio" name="q3" value="Positive"> Positive</label>
+            <label class="choice"><input type="radio" name="q3" value="Negative"> Negative</label>
+            <label class="choice"><input type="radio" name="q3" value="Zero"> Zero</label>
+            <label class="choice"><input type="radio" name="q3" value="Undefined"> Undefined</label>
+          </div>
+          <div class="explain">Horizontal lines have slope <strong>0</strong>.</div>
+        </section>
+
+        <!-- Q4 sign of slope in y = -x + 4 -->
+        <section class="q" data-correct="Negative">
+          <h2>Q4</h2>
+          <div class="prompt">For the equation <strong>y = −x + 4</strong>, is the slope positive or negative?</div>
+          <div class="choices" role="radiogroup" aria-label="Q4 choices">
+            <label class="choice"><input type="radio" name="q4" value="Positive"> Positive</label>
+            <label class="choice"><input type="radio" name="q4" value="Negative"> Negative</label>
+            <label class="choice"><input type="radio" name="q4" value="Zero"> Zero</label>
+            <label class="choice"><input type="radio" name="q4" value="Undefined"> Undefined</label>
+          </div>
+          <div class="explain">Slope is the coefficient of x. Here it’s −1, which is <strong>negative</strong>.</div>
+        </section>
+
+        <!-- Q5 y-intercept of y = 2x - 7 -->
+        <section class="q" data-correct="-7">
+          <h2>Q5</h2>
+          <div class="prompt">What is the <strong>y-intercept</strong> of the line <strong>y = 2x − 7</strong>?</div>
+          <div class="choices" role="radiogroup" aria-label="Q5 choices">
+            <label class="choice"><input type="radio" name="q5" value="-7"> −7</label>
+            <label class="choice"><input type="radio" name="q5" value="2"> 2</label>
+            <label class="choice"><input type="radio" name="q5" value="7"> 7</label>
+            <label class="choice"><input type="radio" name="q5" value="0"> 0</label>
+          </div>
+          <div class="explain">In y = mx + b, the y-intercept is b. Here, b = <strong>−7</strong>.</div>
+        </section>
+
+        <!-- Q6 slope through (0,2) and (3,2) -->
+        <section class="q" data-correct="Zero">
+          <h2>Q6</h2>
+          <div class="prompt">What is the slope of the line through <strong>(0, 2)</strong> and <strong>(3, 2)</strong>?</div>
+          <div class="choices" role="radiogroup" aria-label="Q6 choices">
+            <label class="choice"><input type="radio" name="q6" value="Positive"> Positive</label>
+            <label class="choice"><input type="radio" name="q6" value="Negative"> Negative</label>
+            <label class="choice"><input type="radio" name="q6" value="Zero"> Zero</label>
+            <label class="choice"><input type="radio" name="q6" value="Undefined"> Undefined</label>
+          </div>
+          <div class="explain">Slope = (2−2)/(3−0) = 0/3 = <strong>0</strong>.</div>
+        </section>
+
+        <!-- Q7 slope through (1,1) and (1,5) -->
+        <section class="q" data-correct="Undefined">
+          <h2>Q7</h2>
+          <div class="prompt">What is the slope of the line through <strong>(1, 1)</strong> and <strong>(1, 5)</strong>?</div>
+          <div class="choices" role="radiogroup" aria-label="Q7 choices">
+            <label class="choice"><input type="radio" name="q7" value="Positive"> Positive</label>
+            <label class="choice"><input type="radio" name="q7" value="Negative"> Negative</label>
+            <label class="choice"><input type="radio" name="q7" value="Zero"> Zero</label>
+            <label class="choice"><input type="radio" name="q7" value="Undefined"> Undefined</label>
+          </div>
+          <div class="explain">Slope = (5−1)/(1−1) = 4/0 → <strong>undefined</strong> (vertical line).</div>
+        </section>
+
+        <!-- Q8 vertical line through x = -2 -->
+        <section class="q" data-correct="x = -2">
+          <h2>Q8</h2>
+          <div class="prompt">Which equation is a <strong>vertical</strong> line through <strong>x = −2</strong>?</div>
+          <div class="choices" role="radiogroup" aria-label="Q8 choices">
+            <label class="choice"><input type="radio" name="q8" value="x = -2"> x = −2</label>
+            <label class="choice"><input type="radio" name="q8" value="y = -2"> y = −2</label>
+            <label class="choice"><input type="radio" name="q8" value="y = x - 2"> y = x − 2</label>
+            <label class="choice"><input type="radio" name="q8" value="y = -2x"> y = −2x</label>
+          </div>
+          <div class="explain">Vertical lines have the form <strong>x = constant</strong>, so x = −2.</div>
+        </section>
+      </div>
+
+      <div class="bottom">
+        <div><span class="badge" id="answeredBadge">0 / 8 answered</span></div>
+        <div>
+          <button id="resetBtn" title="Clear all answers">Reset</button>
+          <button id="submitBtn" class="primary" title="Grade the whole quiz">Submit Test</button>
+        </div>
+      </div>
+
+      <div class="results" id="results">
+        <div class="score" id="scoreText"></div>
+        <div class="muted">Answers are now revealed under each question.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* --------- Graph drawing (hidden equations) --------- */
+function drawAllCanvases(){
+  document.querySelectorAll('canvas[data-graph]').forEach(cv=>{
+    const kind = cv.dataset.graph;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H);
+
+    const xmin=-10, xmax=10, ymin=-10, ymax=10;
+    const sx = x => ((x - xmin) / (xmax - xmin)) * W;
+    const sy = y => H - ((y - ymin) / (ymax - ymin)) * H;
+
+    // grid
+    ctx.lineWidth = 1; ctx.strokeStyle = "#1f2a44";
+    for(let x=-10; x<=10; x++){
+      ctx.beginPath(); ctx.moveTo(sx(x), sy(ymin)); ctx.lineTo(sx(x), sy(ymax)); ctx.stroke();
+    }
+    for(let y=-10; y<=10; y++){
+      ctx.beginPath(); ctx.moveTo(sx(xmin), sy(y)); ctx.lineTo(sx(xmax), sy(y)); ctx.stroke();
+    }
+    // axes
+    ctx.strokeStyle = "#4b5563"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(sx(0), sy(ymin)); ctx.lineTo(sx(0), sy(ymax)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx(xmin), sy(0)); ctx.lineTo(sx(xmax), sy(0)); ctx.stroke();
+
+    // line color
+    ctx.strokeStyle = "#60a5fa"; ctx.lineWidth = 3;
+
+    if(kind === 'line'){
+      const m = parseFloat(cv.dataset.m);
+      const b = parseFloat(cv.dataset.b);
+      ctx.beginPath();
+      let started=false;
+      for(let x=xmin; x<=xmax; x+=0.05){
+        const y = m*x + b, X = sx(x), Y = sy(y);
+        if(!started){ ctx.moveTo(X,Y); started=true; } else { ctx.lineTo(X,Y); }
+      }
+      ctx.stroke();
+    } else if(kind === 'vertical'){
+      const x = parseFloat(cv.dataset.x);
+      const X = sx(x);
+      ctx.beginPath(); ctx.moveTo(X, sy(ymin)); ctx.lineTo(X, sy(ymax)); ctx.stroke();
+    } else if(kind === 'horizontal'){
+      const y = parseFloat(cv.dataset.y);
+      const Y = sy(y);
+      ctx.beginPath(); ctx.moveTo(sx(xmin), Y); ctx.lineTo(sx(xmax), Y); ctx.stroke();
+    }
+  });
+}
+
+/* --------- Quiz logic --------- */
+const questions = Array.from(document.querySelectorAll('.q'));
+const submitBtn = document.getElementById('submitBtn');
+const resetBtn = document.getElementById('resetBtn');
+const resultsEl = document.getElementById('results');
+const scoreText = document.getElementById('scoreText');
+const progressTop = document.getElementById('progress');
+const answeredBadge = document.getElementById('answeredBadge');
+
+function getAnswers(){
+  return questions.map((q, i)=>{
+    const name = 'q' + (i+1);
+    const checked = q.querySelector(`input[name="${name}"]:checked`);
+    return checked ? checked.value : null;
+  });
+}
+
+function updateAnswered(){
+  const answers = getAnswers();
+  const n = answers.filter(v => v !== null).length;
+  progressTop.textContent = `${n} / ${questions.length} answered`;
+  answeredBadge.textContent = `${n} / ${questions.length} answered`;
+}
+
+function lockInputs(lock){
+  document.querySelectorAll('input[type=radio]').forEach(inp=>{
+    inp.disabled = lock;
+  });
+}
+
+document.addEventListener('change', e=>{
+  if(e.target.matches('input[type=radio]')) updateAnswered();
+});
+
+submitBtn.addEventListener('click', ()=>{
+  // grade once
+  const answers = getAnswers();
+  let correctCount = 0;
+
+  questions.forEach((q, idx)=>{
+    const correct = q.dataset.correct;
+    const user = answers[idx];
+    const exp = q.querySelector('.explain');
+
+    // mark correctness label (optional visual cue)
+    if(user === correct){ correctCount++; }
+
+    // reveal explanation + correct answer
+    exp.style.display = 'block';
+
+    // append feedback line
+    let fb = q.querySelector('.feedback-line');
+    if(!fb){
+      fb = document.createElement('div');
+      fb.className = 'feedback-line';
+      q.appendChild(fb);
+    }
+    const status = (user === null) ? '<em>no answer</em>' : user;
+    fb.innerHTML = (user === correct)
+      ? `<div class="correct">✔ Correct — Your answer: <strong>${status}</strong></div>`
+      : `<div class="incorrect">✖ Incorrect — Your answer: <strong>${status}</strong> &nbsp;|&nbsp; Correct: <strong>${correct}</strong></div>`;
+  });
+
+  const pct = Math.round((correctCount / questions.length) * 100);
+  scoreText.textContent = `Score: ${correctCount} / ${questions.length} (${pct}%)`;
+  resultsEl.style.display = 'block';
+
+  // lock all inputs after submit
+  lockInputs(true);
+  submitBtn.disabled = true;
+});
+
+resetBtn.addEventListener('click', ()=>{
+  document.querySelectorAll('input[type=radio]').forEach(inp=>{
+    inp.checked = false;
+  });
+  document.querySelectorAll('.explain').forEach(e=>e.style.display='none');
+  document.querySelectorAll('.feedback-line').forEach(e=>e.remove());
+  resultsEl.style.display = 'none';
+  lockInputs(false);
+  submitBtn.disabled = false;
+  updateAnswered();
+  // scroll to top for fresh start
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+
+drawAllCanvases();
+updateAnswered();
+
+// Redraw graphs on resize for crispness (optional)
+window.addEventListener('resize', drawAllCanvases);
+</script>
+</body>
+</html>
